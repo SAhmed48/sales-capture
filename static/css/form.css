@@ -1,0 +1,74 @@
+/* Form inputs */
+.form-input {
+    width: 100%;
+    border-radius: 0.75rem;
+    border: 1.5px solid #e2e8f0;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    color: #1e293b;
+    background: #fff;
+    transition: all 0.2s ease;
+}
+.form-input:hover {
+    border-color: #cbd5e1;
+}
+.form-input:focus {
+    outline: none;
+    border-color: #0ea5e9;
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+}
+.form-input::placeholder {
+    color: #94a3b8;
+}
+
+/* Textarea */
+textarea.form-input {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Submit button */
+.btn-submit {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+.btn-submit:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 25px -5px rgba(14, 165, 233, 0.3);
+}
+.btn-submit:active:not(:disabled) {
+    transform: translateY(0);
+}
+.btn-submit:disabled {
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+
+/* Message alerts */
+.alert {
+    animation: slideUp 0.4s ease-out;
+}
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Card hover */
+.card-hover {
+    transition: all 0.3s ease;
+}
+.card-hover:hover {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+}
+.card-hover:focus-within {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+}
+
+/* Focus ring for accessibility */
+.form-input:focus-visible,
+.btn-submit:focus-visible {
+    outline: 2px solid #0ea5e9;
+    outline-offset: 2px;
+}

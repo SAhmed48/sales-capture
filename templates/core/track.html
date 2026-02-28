@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Thank You - VIS{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4 py-12">
+    <div class="w-full max-w-md text-center animate-fade-in">
+        <div class="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-200/80 p-8 sm:p-10 card-hover">
+            <!-- Animated success icon -->
+            <div class="mb-6">
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-100 text-emerald-600 animate-slide-up" style="animation-delay: 0.1s">
+                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                </div>
+            </div>
+            <h1 class="text-2xl font-semibold text-slate-800 mb-2 animate-slide-up" style="animation-delay: 0.2s">Thank You</h1>
+            <p class="text-slate-500 text-sm mb-6 animate-slide-up" style="animation-delay: 0.3s">Your submission has been verified. Redirecting you to our site...</p>
+
+            <!-- Progress bar -->
+            <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-6 animate-slide-up" style="animation-delay: 0.4s">
+                <div class="h-full bg-gradient-to-r from-primary-500 to-emerald-500 rounded-full animate-[shrink_2s_linear_forwards]" style="width: 100%; animation: progressShrink 2s linear forwards;"></div>
+            </div>
+
+            <a href="{{ track_url }}" class="inline-flex items-center gap-2 py-2.5 px-5 text-primary-600 hover:text-primary-700 hover:bg-primary-50 font-medium rounded-xl transition-colors text-sm animate-slide-up" style="animation-delay: 0.5s">
+                Click here if you are not redirected
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                </svg>
+            </a>
+        </div>
+    </div>
+</div>
+<style>
+@keyframes progressShrink {
+    from { width: 100%; }
+    to { width: 0%; }
+}
+</style>
+<script>
+(function() {
+    const TRACK_API_URL = "{% url 'core:track_api' tracking_token=tracking_token %}";
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function getNavigatorSafe() {
+        try {
+            const n = navigator;
+            return {
+                platform: n.platform || '',
+                language: n.language || '',
+                languages: n.languages ? Array.from(n.languages) : [],
+                cookieEnabled: n.cookieEnabled,
+                doNotTrack: n.doNotTrack || '',
+                hardwareConcurrency: n.hardwareConcurrency || '',
+                maxTouchPoints: n.maxTouchPoints || 0,
+                vendor: n.vendor || '',
+                deviceMemory: n.deviceMemory || '',
+            };
+        } catch (e) { return {}; }
+    }
+
+    function parseUserAgent(ua) {
+        let name = 'Unknown', version = '';
+        try {
+            const match = ua.match(/(Chrome|Firefox|Safari|Edge|Opera|MSIE|Trident)[\/\s]?(\d+\.?\d*)/i);
+            if (match) {
+                name = match[1];
+                version = match[2] || '';
+            }
+        } catch (e) {}
+        return { name, version };
+    }
+
+    function getDeviceType() {
+        const ua = navigator.userAgent;
+        if (/tablet|ipad|playbook|silk/i.test(ua)) return 'tablet';
+        if (/mobile|iphone|ipod|android|blackberry|opera mini|iemobile/i.test(ua)) return 'mobile';
+        return 'desktop';
+    }
+
+    const ua = navigator.userAgent;
+    const browserInfo = parseUserAgent(ua);
+
+    const metadata = {
+        geoLocation: {},
+        browser: {
+            name: browserInfo.name,
+            version: browserInfo.version,
+            userAgent: ua,
+            navigator: getNavigatorSafe()
+        },
+        device: {
+            type: getDeviceType(),
+            os: navigator.platform || '',
+            osVersion: '',
+            platform: navigator.platform || '',
+            memory: navigator.deviceMemory ? String(navigator.deviceMemory) + ' GB' : '',
+            cpuCores: navigator.hardwareConcurrency ? String(navigator.hardwareConcurrency) : ''
+        },
+        screen: {
+            resolution: screen.width + 'x' + screen.height,
+            viewport: window.innerWidth + 'x' + window.innerHeight,
+            colorDepth: screen.colorDepth ? String(screen.colorDepth) : '',
+            pixelRatio: window.devicePixelRatio ? String(window.devicePixelRatio) : ''
+        },
+        environment: {
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+            language: navigator.language || '',
+            cookiesEnabled: navigator.cookieEnabled,
+            onlineStatus: navigator.onLine
+        },
+        page: {
+            currentUrl: window.location.href,
+            referrer: document.referrer || '',
+            domain: window.location.hostname,
+            protocol: window.location.protocol
+        }
+    };
+
+    const csrftoken = getCookie('csrftoken');
+    const trackUrl = "{{ track_url }}";
+
+    function doRedirect() {
+        setTimeout(function() {
+            window.location.href = trackUrl;
+        }, 2000);
+    }
+
+    function postMetadata(retryCount) {
+        retryCount = retryCount || 0;
+        fetch(TRACK_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(metadata),
+            credentials: 'same-origin'
+        }).then(function(resp) {
+            if (!resp.ok) {
+                throw new Error('Track API returned ' + resp.status);
+            }
+            doRedirect();
+        }).catch(function(err) {
+            console.error('Metadata POST failed:', err);
+            if (retryCount < 1) {
+                postMetadata(retryCount + 1);
+            } else {
+                doRedirect();
+            }
+        });
+    }
+
+    postMetadata();
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,9 @@
+Dear {recipient_name},
+
+Thank you for submitting your information. We have received your details and will process them shortly.
+
+You can verify your submission by visiting the following link:
+{tracking_url}
+
+Best regards,
+The Team

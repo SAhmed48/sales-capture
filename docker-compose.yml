@@ -1,0 +1,44 @@
+services:
+  db:
+    image: postgres:15-alpine
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-vis_db}
+      POSTGRES_USER: ${POSTGRES_USER:-vis_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vis_password}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vis_user} -d ${POSTGRES_DB:-vis_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+
+  web:
+    build: .
+    command: gunicorn config.wsgi:application -c gunicorn.conf.py
+    mem_limit: 768m
+    volumes:
+      - .:/app
+    ports:
+      - "3000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - DEBUG=${DEBUG:-True}
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      - DATABASE_URL=postgres://${POSTGRES_USER:-vis_user}:${POSTGRES_PASSWORD:-vis_password}@db:5432/${POSTGRES_DB:-vis_db}
+      - EMAIL_HOST=${EMAIL_HOST:-smtp.example.com}
+      - EMAIL_HOST_USER=${EMAIL_HOST_USER:-}
+      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD:-}
+      - EMAIL_FROM=${EMAIL_FROM:-noreply@example.com}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID:-}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN:-}
+      - TWILIO_FROM_NUMBER=${TWILIO_FROM_NUMBER:-}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started

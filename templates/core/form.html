@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Your Information - VIS{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4 py-12 sm:py-16">
+    <div class="w-full max-w-xl animate-fade-in">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary-100 text-primary-600 mb-4">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-semibold text-slate-800 mb-2">Submit Your Information</h1>
+            <p class="text-slate-500 text-sm sm:text-base max-w-md mx-auto">Fill in your details below. We'll send a confirmation to your email and phone with a verification link.</p>
+        </div>
+
+        <!-- Form card -->
+        <div class="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-200/80 p-6 sm:p-8 card-hover animate-slide-up">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="mb-6 p-4 rounded-xl alert flex items-start gap-3 {% if message.tags == 'success' %}bg-emerald-50 text-emerald-800 border border-emerald-200/80{% else %}bg-red-50 text-red-800 border border-red-200/80{% endif %}">
+                        {% if message.tags == 'success' %}
+                            <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                        {% else %}
+                            <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                        {% endif %}
+                        <span class="text-sm font-medium">{{ message }}</span>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post" action="{% url 'core:form' %}" id="submit-form" class="space-y-5">
+                {% csrf_token %}
+
+                <div class="grid gap-5 sm:grid-cols-2">
+                    <div>
+                        <label for="id_name" class="block text-sm font-medium text-slate-700 mb-1.5">Name{% if form.name.field.required %}<span class="text-red-500">*</span>{% endif %}</label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                            <p class="mt-1.5 text-sm text-red-600 flex items-center gap-1">{{ form.name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label for="id_phone" class="block text-sm font-medium text-slate-700 mb-1.5">Phone{% if form.phone.field.required %}<span class="text-red-500">*</span>{% endif %}</label>
+                        {{ form.phone }}
+                        {% if form.phone.errors %}
+                            <p class="mt-1.5 text-sm text-red-600">{{ form.phone.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div>
+                    <label for="id_email" class="block text-sm font-medium text-slate-700 mb-1.5">Email{% if form.email.field.required %}<span class="text-red-500">*</span>{% endif %}</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <p class="mt-1.5 text-sm text-red-600">{{ form.email.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="id_address" class="block text-sm font-medium text-slate-700 mb-1.5">Address{% if form.address.field.required %}<span class="text-red-500">*</span>{% endif %}</label>
+                    {{ form.address }}
+                    {% if form.address.errors %}
+                        <p class="mt-1.5 text-sm text-red-600">{{ form.address.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="grid gap-5 sm:grid-cols-3">
+                    <div>
+                        <label for="id_zip_code" class="block text-sm font-medium text-slate-700 mb-1.5">Zip Code{% if form.zip_code.field.required %}<span class="text-red-500">*</span>{% endif %}</label>
+                        {{ form.zip_code }}
+                        {% if form.zip_code.errors %}
+                            <p class="mt-1.5 text-sm text-red-600">{{ form.zip_code.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label for="id_city" class="block text-sm font-medium text-slate-700 mb-1.5">City</label>
+                        {{ form.city }}
+                        {% if form.city.errors %}
+                            <p class="mt-1.5 text-sm text-red-600">{{ form.city.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label for="id_country" class="block text-sm font-medium text-slate-700 mb-1.5">Country{% if form.country.field.required %}<span class="text-red-500">*</span>{% endif %}</label>
+                        {{ form.country }}
+                        {% if form.country.errors %}
+                            <p class="mt-1.5 text-sm text-red-600">{{ form.country.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" id="submit-btn" class="btn-submit w-full py-3.5 px-6 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-xl shadow-lg shadow-primary-500/25 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-80 disabled:cursor-not-allowed">
+                        Submit
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <p class="text-center text-slate-400 text-xs mt-6">Your information is secure and will only be used for verification purposes.</p>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('submit-form');
+    var btn = document.getElementById('submit-btn');
+    if (form && btn) {
+        form.addEventListener('submit', function() {
+            btn.disabled = true;
+            btn.textContent = 'Submitting...';
+        });
+    }
+});
+</script>
+{% endblock %}
