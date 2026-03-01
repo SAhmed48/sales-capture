@@ -1,4 +1,4 @@
-# VIS - Single-Page Form with Click Tracking
+# Sales Capture - Single-Page Form with Click Tracking
 
 A Django application that collects user information via a form, saves it to PostgreSQL, sends confirmation via email and SMS, and tracks metadata when users click the confirmation link.
 

@@ -72,3 +72,34 @@ textarea.form-input {
     outline: 2px solid #0ea5e9;
     outline-offset: 2px;
 }
+
+/* Dashboard */
+.dashboard-card {
+    opacity: 0;
+    animation: slideUp 0.5s ease-out forwards;
+}
+.dashboard-card:nth-child(1) { animation-delay: 0s; }
+.dashboard-card:nth-child(2) { animation-delay: 0.05s; }
+.dashboard-card:nth-child(3) { animation-delay: 0.1s; }
+.dashboard-card:nth-child(4) { animation-delay: 0.15s; }
+.dashboard-card:nth-child(5) { animation-delay: 0.2s; }
+.dashboard-card:nth-child(6) { animation-delay: 0.25s; }
+.dashboard-card:nth-child(7) { animation-delay: 0.3s; }
+.dashboard-card:nth-child(8) { animation-delay: 0.35s; }
+.dashboard-card:nth-child(9) { animation-delay: 0.4s; }
+.dashboard-card:nth-child(n+10) { animation-delay: 0.45s; }
+
+/* Click metadata cards */
+.click-card .click-detail-content {
+    transition: opacity 0.2s ease;
+}
+.click-meta-item {
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 0.5rem;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+}
+.click-detail-toggle:focus-visible {
+    outline: 2px solid #0ea5e9;
+    outline-offset: 2px;
+}

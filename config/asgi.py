@@ -1,5 +1,5 @@
 """
-ASGI config for VIS project.
+ASGI config for Sales Capture project.
 """
 import os
 

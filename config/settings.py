@@ -1,5 +1,5 @@
 """
-Django settings for VIS project.
+Django settings for Sales Capture project.
 """
 import os
 from pathlib import Path
@@ -128,3 +128,8 @@ SITE_URL = env('SITE_URL', default='http://localhost:8000')
 # Trusted proxy IPs - only trust X-Forwarded-For when request comes from these
 # Add your reverse proxy/load balancer IPs. Docker bridge: 172.17.0.0/16
 TRUSTED_PROXY_IPS = set(ip.strip() for ip in env.list('TRUSTED_PROXY_IPS', default=['127.0.0.1', '::1', '172.17.0.1']))
+
+# Auth (login/dashboard)
+LOGIN_URL = 'core:login'
+LOGIN_REDIRECT_URL = 'core:dashboard'
+LOGOUT_REDIRECT_URL = 'core:login'

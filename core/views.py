@@ -1,11 +1,17 @@
 import json
 import logging
 import uuid
+from datetime import timedelta
+
 from django.conf import settings
+from django.utils import timezone
 from django.contrib import messages
+from django.contrib.auth.views import LoginView
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
+from django.views import View
 from django.views.decorators.http import require_http_methods, require_POST
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django_ratelimit.decorators import ratelimit
@@ -34,6 +40,26 @@ def get_client_ip(request):
         if x_real_ip:
             return x_real_ip.strip()
     return remote_addr
+
+
+class CustomLoginView(LoginView):
+    """Custom login page for dashboard access."""
+    template_name = 'core/login.html'
+    redirect_authenticated_user = True
+
+
+class DashboardView(LoginRequiredMixin, View):
+    """Dashboard showing all submissions with their details."""
+    def get(self, request):
+        submissions = Submission.objects.all().prefetch_related('click_metadata')
+        total_clicks = ClickMetadata.objects.count()
+        week_ago = timezone.now() - timedelta(days=7)
+        recent_count = Submission.objects.filter(created_at__gte=week_ago).count()
+        return render(request, 'core/dashboard.html', {
+            'submissions': submissions,
+            'total_clicks': total_clicks,
+            'recent_count': recent_count,
+        })
 
 
 def get_geo_from_ip(ip_address):
@@ -65,7 +91,7 @@ def get_geo_from_ip(ip_address):
         r = requests.get(
             f'https://ipinfo.io/{ip_address}/json',
             timeout=3,
-            headers={'Accept': 'application/json', 'User-Agent': 'VIS/1.0'}
+            headers={'Accept': 'application/json', 'User-Agent': 'SalesCapture/1.0'}
         )
         if r.status_code == 200:
             data = r.json()

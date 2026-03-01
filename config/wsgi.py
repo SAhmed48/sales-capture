@@ -1,5 +1,5 @@
 """
-WSGI config for VIS project.
+WSGI config for Sales Capture project.
 """
 import os
 
