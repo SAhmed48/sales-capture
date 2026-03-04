@@ -120,7 +120,7 @@ DEFAULT_FROM_EMAIL = env('EMAIL_FROM', default='noreply@example.com')
 # Twilio
 TWILIO_ACCOUNT_SID = env('TWILIO_ACCOUNT_SID', default='')
 TWILIO_AUTH_TOKEN = env('TWILIO_AUTH_TOKEN', default='')
-TWILIO_FROM_NUMBER = env('TWILIO_FROM_NUMBER', default='')
+TWILIO_FROM_NUMBER = env('TWILIO_FROM_NUMBER', default='+15715064505') or '+15715064505'
 
 # Site URL for building absolute links (fallback when request not available)
 SITE_URL = env('SITE_URL', default='http://localhost:8000')
