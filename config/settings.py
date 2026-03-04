@@ -104,18 +104,26 @@ STATICFILES_DIRS = [BASE_DIR / 'static'] if (BASE_DIR / 'static').exists() else 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Email (console backend in DEBUG for easier local testing)
-EMAIL_BACKEND = (
-    'django.core.mail.backends.console.EmailBackend'
-    if DEBUG
-    else 'django.core.mail.backends.smtp.EmailBackend'
-)
+# Email (console backend when credentials missing or placeholder host)
 EMAIL_HOST = env('EMAIL_HOST', default='smtp.example.com')
 EMAIL_PORT = env.int('EMAIL_PORT', default=587)
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = env('EMAIL_FROM', default='noreply@example.com')
+EMAIL_TIMEOUT = 10  # Prevent SMTP connection from hanging indefinitely
+
+_use_console_email = (
+    DEBUG
+    or not EMAIL_HOST_USER
+    or not EMAIL_HOST_PASSWORD
+    or EMAIL_HOST in ('smtp.example.com', 'example.com', '')
+)
+EMAIL_BACKEND = (
+    'django.core.mail.backends.console.EmailBackend'
+    if _use_console_email
+    else 'core.email_backend.TimeoutSMTPEmailBackend'
+)
 
 # Twilio
 TWILIO_ACCOUNT_SID = env('TWILIO_ACCOUNT_SID', default='')
