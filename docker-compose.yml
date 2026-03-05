@@ -18,7 +18,7 @@ services:
 
   web:
     build: .
-    command: gunicorn config.wsgi:application -c gunicorn.conf.py
+    command: gunicorn config.wsgi:application -c gunicorn.conf.py --no-control-socket
     mem_limit: 768m
     volumes:
       - .:/app
