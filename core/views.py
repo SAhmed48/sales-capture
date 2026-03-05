@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.contrib import messages
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import JsonResponse, Http404
+from django.http import JsonResponse, Http404, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.views import View
@@ -31,7 +31,20 @@ def get_client_ip(request):
     """Extract client IP from request. Only trust proxy headers when request comes from a trusted proxy."""
     remote_addr = request.META.get('REMOTE_ADDR', '')
     trusted = getattr(settings, 'TRUSTED_PROXY_IPS', {'127.0.0.1', '::1', '172.17.0.1'})
-    from_proxy = remote_addr in trusted or any(remote_addr.startswith(p.rstrip('*')) for p in trusted if '*' in p)
+
+    def is_trusted(addr, entry):
+        entry = entry.strip()
+        if '/' in entry:
+            try:
+                from ipaddress import ip_address, ip_network
+                return ip_address(addr) in ip_network(entry)
+            except ValueError:
+                return False
+        if '*' in entry:
+            return addr.startswith(entry.rstrip('*'))
+        return addr == entry
+
+    from_proxy = any(is_trusted(remote_addr, p) for p in trusted)
     if from_proxy:
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
         if x_forwarded_for:
@@ -163,6 +176,11 @@ def form_view(request):
 def thank_you_view(request):
     """Dedicated thank you page shown after successful submission."""
     return render(request, 'core/thank_you.html')
+
+
+def favicon_view(request):
+    """Return 204 No Content for /favicon.ico to avoid 404 log noise."""
+    return HttpResponse(status=204)
 
 
 @ensure_csrf_cookie

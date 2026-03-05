@@ -16,7 +16,7 @@ A Django application that collects user information via a form, saves it to Post
    docker-compose up --build
    ```
 
-3. Open http://localhost:8000
+3. Open http://localhost:3000 (nginx proxies to Gunicorn)
 
 ### Local Development (without Docker)
 
@@ -57,7 +57,7 @@ Set these environment variables (see `.env.example`):
 
 ## Troubleshooting
 
-**"Error handling request (no URI read)"** – This appears when a client disconnects before sending a full HTTP request (e.g., quick refresh, tab close, health checks). It is harmless; Gunicorn restarts the worker automatically. For production, use a reverse proxy (nginx) with `proxy_ignore_client_abort on` to reduce these logs.
+**"Error handling request (no URI read)"** – When running with Docker, nginx sits in front of Gunicorn and buffers client connections, so this should be rare. If you see it (e.g. without nginx), it means a client disconnected before sending a full HTTP request; Gunicorn restarts the worker automatically.
 
 ## Admin
 
