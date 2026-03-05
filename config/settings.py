@@ -19,13 +19,13 @@ SECRET_KEY = env('SECRET_KEY', default='django-insecure-change-me')
 DEBUG = env('DEBUG')
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
 
-# CSRF: origins allowed for unsafe requests (Django 4.0+). Must include scheme and port.
+# CSRF: origins allowed for unsafe requests (Django 4.0+). Must include scheme; port only if not 80/443.
 CSRF_TRUSTED_ORIGINS = env.list(
     'CSRF_TRUSTED_ORIGINS',
     default=[
-        'http://localhost:3000',
-        'http://127.0.0.1:3000',
-        'http://64.23.150.27:3000',
+        'http://localhost',
+        'http://127.0.0.1',
+        'http://64.23.150.27',
     ]
 )
 
