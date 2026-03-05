@@ -16,7 +16,7 @@ A Django application that collects user information via a form, saves it to Post
    docker-compose up --build
    ```
 
-3. Open http://localhost:3000 (nginx proxies to Gunicorn)
+3. Open http://localhost (nginx on port 80 proxies to Gunicorn)
 
 ### Local Development (without Docker)
 
