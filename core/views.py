@@ -1,9 +1,11 @@
 import json
 import logging
+import re
 import uuid
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from django.conf import settings
+from django.db.models import Q
 from django.utils import timezone
 from django.contrib import messages
 from django.contrib.auth.views import LoginView
@@ -18,6 +20,7 @@ from django_ratelimit.decorators import ratelimit
 
 from .forms import SubmissionForm
 from .models import Submission, ClickMetadata
+from .pdf_export import build_submissions_pdf
 from .services.email import send_submission_confirmation_email
 from .services.sms import send_submission_confirmation_sms
 
@@ -61,10 +64,44 @@ class CustomLoginView(LoginView):
     redirect_authenticated_user = True
 
 
+def _get_submissions_queryset(request):
+    """Build submissions queryset with optional date filter and search (name, phone). Same logic for dashboard and PDF export."""
+    qs = Submission.objects.all().order_by('-created_at')
+    filter_days = request.GET.get('days', '').strip()
+    filter_from = request.GET.get('from', '').strip()
+    filter_to = request.GET.get('to', '').strip()
+    search = request.GET.get('search', '').strip()
+
+    if filter_days:
+        try:
+            n = int(filter_days)
+            if n > 0:
+                since = timezone.now() - timedelta(days=n)
+                qs = qs.filter(created_at__gte=since)
+        except ValueError:
+            pass
+    elif filter_from or filter_to:
+        try:
+            if filter_from:
+                from_date = datetime.strptime(filter_from, '%Y-%m-%d').date()
+                qs = qs.filter(created_at__date__gte=from_date)
+            if filter_to:
+                to_date = datetime.strptime(filter_to, '%Y-%m-%d').date()
+                qs = qs.filter(created_at__date__lte=to_date)
+        except ValueError:
+            pass
+
+    if search:
+        qs = qs.filter(Q(name__icontains=search) | Q(phone__icontains=search))
+
+    return qs.prefetch_related('click_metadata'), filter_days, filter_from, filter_to, search
+
+
 class DashboardView(LoginRequiredMixin, View):
-    """Dashboard showing all submissions with their details."""
+    """Dashboard showing all submissions with their details. Supports date filter and search by name/phone."""
     def get(self, request):
-        submissions = Submission.objects.all().prefetch_related('click_metadata')
+        submissions_qs, filter_days, filter_from, filter_to, search = _get_submissions_queryset(request)
+        submissions = list(submissions_qs)
         total_clicks = ClickMetadata.objects.count()
         week_ago = timezone.now() - timedelta(days=7)
         recent_count = Submission.objects.filter(created_at__gte=week_ago).count()
@@ -72,7 +109,62 @@ class DashboardView(LoginRequiredMixin, View):
             'submissions': submissions,
             'total_clicks': total_clicks,
             'recent_count': recent_count,
+            'filter_days': filter_days,
+            'filter_from': filter_from,
+            'filter_to': filter_to,
+            'search': search,
         })
+
+
+PDF_EXPORT_MAX_SUBMISSIONS = 200
+
+
+class ExportSubmissionPdfView(LoginRequiredMixin, View):
+    """Export a single submission with its click history as PDF."""
+    def get(self, request, pk):
+        submission = Submission.objects.filter(pk=pk).prefetch_related('click_metadata').first()
+        if not submission:
+            raise Http404("Submission not found")
+        pdf_bytes = build_submissions_pdf([submission])
+        name_slug = re.sub(r'[^\w\s-]', '', submission.name).strip()[:50].replace(' ', '-') or 'submission'
+        filename = f"submission-{pk}-{name_slug}.pdf"
+        response = HttpResponse(pdf_bytes, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+
+
+class ExportSubmissionsPdfView(LoginRequiredMixin, View):
+    """Export submissions as PDF. Respects same date filter and search as dashboard."""
+    def get(self, request):
+        submissions_qs, _fd, _ff, _ft, _search = _get_submissions_queryset(request)
+        submissions = list(submissions_qs[:PDF_EXPORT_MAX_SUBMISSIONS])
+        if not submissions:
+            response = HttpResponse(b'', content_type='application/pdf')
+            response['Content-Disposition'] = 'attachment; filename="submissions-export-empty.pdf"'
+            return response
+        pdf_bytes = build_submissions_pdf(submissions)
+        date_str = timezone.now().strftime('%Y-%m-%d')
+        filename = f"submissions-export-{date_str}.pdf"
+        response = HttpResponse(pdf_bytes, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+
+
+class DeleteSubmissionView(LoginRequiredMixin, View):
+    """Delete a submission and its click metadata. Accepts POST or DELETE. Returns JSON for API, redirects for form."""
+    def post(self, request, pk):
+        return self._delete(request, pk)
+
+    def delete(self, request, pk):
+        return self._delete(request, pk)
+
+    def _delete(self, request, pk):
+        submission = get_object_or_404(Submission, pk=pk)
+        submission.delete()
+        if request.accepts('text/html'):
+            messages.success(request, f'Submission "{submission.name}" has been deleted.')
+            return redirect(reverse('core:dashboard') + '?' + request.GET.urlencode())
+        return JsonResponse({'deleted': True, 'id': pk})
 
 
 def get_geo_from_ip(ip_address):
@@ -146,15 +238,8 @@ def form_view(request):
     if request.method == 'POST':
         form = SubmissionForm(request.POST)
         if form.is_valid():
-            data = form.cleaned_data
-            # Update existing record if same phone, else create new (email does not matter)
-            submission = Submission.objects.filter(phone=data['phone']).first()
-            if submission:
-                for key, value in data.items():
-                    setattr(submission, key, value)
-                submission.save()
-            else:
-                submission = form.save()
+            # Always create new submission (never update existing)
+            submission = form.save()
             tracking_url = request.build_absolute_uri(
                 reverse('core:track', args=[str(submission.tracking_token)])
             )
