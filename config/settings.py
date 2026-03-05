@@ -19,6 +19,16 @@ SECRET_KEY = env('SECRET_KEY', default='django-insecure-change-me')
 DEBUG = env('DEBUG')
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
 
+# CSRF: origins allowed for unsafe requests (Django 4.0+). Must include scheme and port.
+CSRF_TRUSTED_ORIGINS = env.list(
+    'CSRF_TRUSTED_ORIGINS',
+    default=[
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'http://64.23.150.27:3000',
+    ]
+)
+
 # Fail startup in production if SECRET_KEY is insecure
 if not DEBUG:
     insecure = ('change-me', 'insecure', 'django-insecure', 'secret', 'default')
@@ -134,8 +144,8 @@ TWILIO_FROM_NUMBER = env('TWILIO_FROM_NUMBER', default='+15715064505') or '+1571
 SITE_URL = env('SITE_URL', default='http://localhost:8000')
 
 # Trusted proxy IPs - only trust X-Forwarded-For when request comes from these
-# Add your reverse proxy/load balancer IPs. Docker bridge: 172.17.0.0/16
-TRUSTED_PROXY_IPS = set(ip.strip() for ip in env.list('TRUSTED_PROXY_IPS', default=['127.0.0.1', '::1', '172.17.0.1']))
+# Add your reverse proxy/load balancer IPs. Includes Docker networks (172.16.0.0/12).
+TRUSTED_PROXY_IPS = set(ip.strip() for ip in env.list('TRUSTED_PROXY_IPS', default=['127.0.0.1', '::1', '172.17.0.1', '172.16.0.0/12']))
 
 # Auth (login/dashboard)
 LOGIN_URL = 'core:login'

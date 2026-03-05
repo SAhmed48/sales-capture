@@ -1,0 +1,29 @@
+# Exclude from build context (avoids "permission denied" on postgres_data)
+postgres_data/
+
+# Git and env
+.git
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv
+venv/
+*.egg-info/
+.eggs/
+
+# Django / build artifacts
+staticfiles/
+*.sqlite3
+db.sqlite3
+*.log
+
+# IDE / OS
+.idea
+.vscode
+.DS_Store
