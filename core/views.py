@@ -68,11 +68,18 @@ def _get_submissions_queryset(request):
     """Build submissions queryset with optional date filter and search (name, phone). Same logic for dashboard and PDF export."""
     qs = Submission.objects.all().order_by('-created_at')
     filter_days = request.GET.get('days', '').strip()
+    filter_period = request.GET.get('period', '').strip()
     filter_from = request.GET.get('from', '').strip()
     filter_to = request.GET.get('to', '').strip()
     search = request.GET.get('search', '').strip()
 
-    if filter_days:
+    if filter_period == 'today':
+        today = timezone.now().date()
+        qs = qs.filter(created_at__date=today)
+    elif filter_period == 'yesterday':
+        yesterday = (timezone.now() - timedelta(days=1)).date()
+        qs = qs.filter(created_at__date=yesterday)
+    elif filter_days:
         try:
             n = int(filter_days)
             if n > 0:
@@ -94,13 +101,13 @@ def _get_submissions_queryset(request):
     if search:
         qs = qs.filter(Q(name__icontains=search) | Q(phone__icontains=search))
 
-    return qs.prefetch_related('click_metadata'), filter_days, filter_from, filter_to, search
+    return qs.prefetch_related('click_metadata'), filter_days, filter_period, filter_from, filter_to, search
 
 
 class DashboardView(LoginRequiredMixin, View):
     """Dashboard showing all submissions with their details. Supports date filter and search by name/phone."""
     def get(self, request):
-        submissions_qs, filter_days, filter_from, filter_to, search = _get_submissions_queryset(request)
+        submissions_qs, filter_days, filter_period, filter_from, filter_to, search = _get_submissions_queryset(request)
         submissions = list(submissions_qs)
         total_clicks = ClickMetadata.objects.count()
         week_ago = timezone.now() - timedelta(days=7)
@@ -110,6 +117,7 @@ class DashboardView(LoginRequiredMixin, View):
             'total_clicks': total_clicks,
             'recent_count': recent_count,
             'filter_days': filter_days,
+            'filter_period': filter_period,
             'filter_from': filter_from,
             'filter_to': filter_to,
             'search': search,
@@ -136,7 +144,7 @@ class ExportSubmissionPdfView(LoginRequiredMixin, View):
 class ExportSubmissionsPdfView(LoginRequiredMixin, View):
     """Export submissions as PDF. Respects same date filter and search as dashboard."""
     def get(self, request):
-        submissions_qs, _fd, _ff, _ft, _search = _get_submissions_queryset(request)
+        submissions_qs, _fd, _fp, _ff, _ft, _search = _get_submissions_queryset(request)
         submissions = list(submissions_qs[:PDF_EXPORT_MAX_SUBMISSIONS])
         if not submissions:
             response = HttpResponse(b'', content_type='application/pdf')

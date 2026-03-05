@@ -35,4 +35,4 @@ echo "Collecting static files..."
 python manage.py collectstatic --noinput --clear
 
 echo "Starting application..."
-exec gunicorn config.wsgi:application -c gunicorn.conf.py
+exec gunicorn config.wsgi:application -c gunicorn.conf.py --no-control-socket

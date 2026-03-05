@@ -13,7 +13,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                     </svg>
                 </div>
-                <h1 class="text-xl font-semibold text-slate-800">Sales Capture Dashboard</h1>
+                <h1 class="text-xl font-semibold text-slate-800">Dashboard</h1>
             </div>
             <div class="flex items-center gap-2 sm:gap-3">
                 <a href="{% url 'core:form' %}" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-xl transition-colors">
@@ -95,11 +95,14 @@
                         <p class="text-xs text-slate-500">Quick range or pick custom dates</p>
                     </div>
                 </div>
-                {% if filter_days or filter_from or filter_to or search %}
+                {% if filter_days or filter_period or filter_from or filter_to or search %}
                 <div class="flex items-center gap-2 flex-wrap">
-                    {% if filter_days or filter_from or filter_to %}
+                    {% if filter_days or filter_period or filter_from or filter_to %}
                     <span class="text-xs font-medium text-primary-600 bg-primary-50 px-2.5 py-1 rounded-lg">
-                        {% if filter_days == '7' %}Last 7 days
+                        {% if filter_period == 'today' %}Today
+                        {% elif filter_period == 'yesterday' %}Yesterday
+                        {% elif filter_days == '3' %}Last 3 days
+                        {% elif filter_days == '7' %}Last 7 days
                         {% elif filter_days == '30' %}Last 30 days
                         {% elif filter_from or filter_to %}{{ filter_from|default:"…" }} → {{ filter_to|default:"…" }}
                         {% endif %}
@@ -108,46 +111,47 @@
                     {% if search %}
                     <span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg">
                         Search: {{ search }}
-                        <a href="{% url 'core:dashboard' %}{% if filter_days %}?days={{ filter_days }}{% elif filter_from or filter_to %}?from={{ filter_from }}&to={{ filter_to }}{% endif %}" class="text-slate-500 hover:text-slate-700" aria-label="Clear search">&times;</a>
+                        <a href="{% url 'core:dashboard' %}{% if filter_period %}?period={{ filter_period }}{% elif filter_days %}?days={{ filter_days }}{% elif filter_from or filter_to %}?from={{ filter_from }}&to={{ filter_to }}{% endif %}" class="text-slate-500 hover:text-slate-700" aria-label="Clear search">&times;</a>
                     </span>
                     {% endif %}
                 </div>
                 {% endif %}
             </div>
             <div class="p-5 flex flex-col gap-5">
-                <div class="flex flex-col sm:flex-row sm:items-center gap-4">
-                    <form method="get" action="{% url 'core:dashboard' %}" class="inline-flex items-center gap-2 flex-1 sm:flex-initial sm:min-w-[280px]">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <form method="get" action="{% url 'core:dashboard' %}" class="flex flex-1 min-w-0 max-w-md gap-2">
                         {% if filter_days %}<input type="hidden" name="days" value="{{ filter_days }}">{% endif %}
+                        {% if filter_period %}<input type="hidden" name="period" value="{{ filter_period }}">{% endif %}
                         {% if filter_from %}<input type="hidden" name="from" value="{{ filter_from }}">{% endif %}
                         {% if filter_to %}<input type="hidden" name="to" value="{{ filter_to }}">{% endif %}
                         <label class="sr-only">Search by name or phone</label>
-                        <input type="search" name="search" value="{{ search }}" placeholder="Search by name or phone..." class="flex-1 rounded-xl border border-slate-200 px-4 py-2 text-sm text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <input type="search" name="search" value="{{ search }}" placeholder="Search by name or phone..." class="flex-1 min-w-0 rounded-xl border border-slate-200 px-4 py-2 text-sm text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                         <button type="submit" class="px-4 py-2 rounded-xl text-sm font-medium bg-slate-800 text-white hover:bg-slate-700 transition-colors shrink-0">Search</button>
                     </form>
+                    <a href="{% url 'core:export_submissions_pdf' %}{% if filter_period %}?period={{ filter_period }}{% elif filter_days %}?days={{ filter_days }}{% endif %}{% if filter_from %}{% if filter_period or filter_days %}&{% else %}?{% endif %}from={{ filter_from }}{% endif %}{% if filter_to %}{% if filter_period or filter_days or filter_from %}&{% else %}?{% endif %}to={{ filter_to }}{% endif %}{% if search %}{% if filter_period or filter_days or filter_from or filter_to %}&{% else %}?{% endif %}search={{ search|urlencode }}{% endif %}" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 rounded-xl shadow-sm hover:shadow transition-all shrink-0 w-full lg:w-auto">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Export all as PDF
+                    </a>
                 </div>
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
-                    <div class="flex flex-col gap-4 sm:gap-0 sm:flex-row sm:items-center sm:gap-4">
-                        <div class="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 w-fit">
-                            <a href="{% url 'core:dashboard' %}{% if search %}?search={{ search|urlencode }}{% endif %}" class="px-4 py-2 rounded-lg text-sm font-medium transition-all {% if not filter_days and not filter_from and not filter_to %}bg-white text-primary-700 shadow-sm border border-slate-200/80{% else %}text-slate-600 hover:text-slate-800{% endif %}">All</a>
-                            <a href="{% url 'core:dashboard' %}?days=7{% if search %}&search={{ search|urlencode }}{% endif %}" class="px-4 py-2 rounded-lg text-sm font-medium transition-all {% if filter_days == '7' %}bg-white text-primary-700 shadow-sm border border-slate-200/80{% else %}text-slate-600 hover:text-slate-800{% endif %}">Last 7 days</a>
-                            <a href="{% url 'core:dashboard' %}?days=30{% if search %}&search={{ search|urlencode }}{% endif %}" class="px-4 py-2 rounded-lg text-sm font-medium transition-all {% if filter_days == '30' %}bg-white text-primary-700 shadow-sm border border-slate-200/80{% else %}text-slate-600 hover:text-slate-800{% endif %}">Last 30 days</a>
-                        </div>
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <form method="get" action="{% url 'core:dashboard' %}" class="inline-flex flex-wrap items-center gap-2">
-                                {% if search %}<input type="hidden" name="search" value="{{ search }}">{% endif %}
-                                <label class="sr-only">From date</label>
-                                <input type="date" name="from" value="{{ filter_from }}" class="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                                <span class="text-slate-400 hidden sm:inline">–</span>
-                                <label class="sr-only">To date</label>
-                                <input type="date" name="to" value="{{ filter_to }}" class="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                                <button type="submit" class="px-4 py-2 rounded-xl text-sm font-medium bg-slate-800 text-white hover:bg-slate-700 transition-colors">Apply range</button>
-                            </form>
-                        </div>
+                <div class="flex flex-col xl:flex-row xl:items-center xl:gap-6 gap-4">
+                    <div class="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 overflow-x-auto min-w-0" style="scrollbar-width: thin;">
+                        <a href="{% url 'core:dashboard' %}{% if search %}?search={{ search|urlencode }}{% endif %}" class="px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap shrink-0 {% if not filter_days and not filter_period and not filter_from and not filter_to %}bg-white text-primary-700 shadow-sm border border-slate-200/80{% else %}text-slate-600 hover:text-slate-800{% endif %}">All</a>
+                        <a href="{% url 'core:dashboard' %}?period=today{% if search %}&search={{ search|urlencode }}{% endif %}" class="px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap shrink-0 {% if filter_period == 'today' %}bg-white text-primary-700 shadow-sm border border-slate-200/80{% else %}text-slate-600 hover:text-slate-800{% endif %}">Today</a>
+                        <a href="{% url 'core:dashboard' %}?period=yesterday{% if search %}&search={{ search|urlencode }}{% endif %}" class="px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap shrink-0 {% if filter_period == 'yesterday' %}bg-white text-primary-700 shadow-sm border border-slate-200/80{% else %}text-slate-600 hover:text-slate-800{% endif %}">Yesterday</a>
+                        <a href="{% url 'core:dashboard' %}?days=3{% if search %}&search={{ search|urlencode }}{% endif %}" class="px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap shrink-0 {% if filter_days == '3' %}bg-white text-primary-700 shadow-sm border border-slate-200/80{% else %}text-slate-600 hover:text-slate-800{% endif %}">3 days</a>
+                        <a href="{% url 'core:dashboard' %}?days=7{% if search %}&search={{ search|urlencode }}{% endif %}" class="px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap shrink-0 {% if filter_days == '7' %}bg-white text-primary-700 shadow-sm border border-slate-200/80{% else %}text-slate-600 hover:text-slate-800{% endif %}">Last 7 days</a>
+                        <a href="{% url 'core:dashboard' %}?days=30{% if search %}&search={{ search|urlencode }}{% endif %}" class="px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap shrink-0 {% if filter_days == '30' %}bg-white text-primary-700 shadow-sm border border-slate-200/80{% else %}text-slate-600 hover:text-slate-800{% endif %}">Last 30 days</a>
                     </div>
-                    <a href="{% url 'core:export_submissions_pdf' %}{% if filter_days %}?days={{ filter_days }}{% endif %}{% if filter_from %}{% if filter_days %}&{% else %}?{% endif %}from={{ filter_from }}{% endif %}{% if filter_to %}{% if filter_days or filter_from %}&{% else %}?{% endif %}to={{ filter_to }}{% endif %}{% if search %}{% if filter_days or filter_from or filter_to %}&{% else %}?{% endif %}search={{ search|urlencode }}{% endif %}" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 rounded-xl shadow-sm hover:shadow transition-all shrink-0 w-full sm:w-auto">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    Export all as PDF
-                </a>
+                    <form method="get" action="{% url 'core:dashboard' %}" class="flex flex-wrap items-center gap-2 shrink-0">
+                        {% if search %}<input type="hidden" name="search" value="{{ search }}">{% endif %}
+                        <label class="sr-only">From date</label>
+                        <input type="date" name="from" value="{{ filter_from }}" class="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <span class="text-slate-400 hidden sm:inline">–</span>
+                        <label class="sr-only">To date</label>
+                        <input type="date" name="to" value="{{ filter_to }}" class="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <button type="submit" class="px-4 py-2 rounded-xl text-sm font-medium bg-slate-800 text-white hover:bg-slate-700 transition-colors">Apply range</button>
+                    </form>
+                </div>
             </div>
         </div>
 
