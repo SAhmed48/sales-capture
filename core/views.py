@@ -5,6 +5,7 @@ import uuid
 from datetime import timedelta, datetime
 
 from django.conf import settings
+from django.db.models import Q
 from django.utils import timezone
 from django.contrib import messages
 from django.contrib.auth.views import LoginView
@@ -64,11 +65,12 @@ class CustomLoginView(LoginView):
 
 
 def _get_submissions_queryset(request):
-    """Build submissions queryset with optional date filter (days, from, to). Same logic for dashboard and PDF export."""
+    """Build submissions queryset with optional date filter and search (name, phone). Same logic for dashboard and PDF export."""
     qs = Submission.objects.all().order_by('-created_at')
     filter_days = request.GET.get('days', '').strip()
     filter_from = request.GET.get('from', '').strip()
     filter_to = request.GET.get('to', '').strip()
+    search = request.GET.get('search', '').strip()
 
     if filter_days:
         try:
@@ -89,13 +91,16 @@ def _get_submissions_queryset(request):
         except ValueError:
             pass
 
-    return qs.prefetch_related('click_metadata'), filter_days, filter_from, filter_to
+    if search:
+        qs = qs.filter(Q(name__icontains=search) | Q(phone__icontains=search))
+
+    return qs.prefetch_related('click_metadata'), filter_days, filter_from, filter_to, search
 
 
 class DashboardView(LoginRequiredMixin, View):
-    """Dashboard showing all submissions with their details. Supports date filter: ?days=N or ?from=YYYY-MM-DD&to=YYYY-MM-DD."""
+    """Dashboard showing all submissions with their details. Supports date filter and search by name/phone."""
     def get(self, request):
-        submissions_qs, filter_days, filter_from, filter_to = _get_submissions_queryset(request)
+        submissions_qs, filter_days, filter_from, filter_to, search = _get_submissions_queryset(request)
         submissions = list(submissions_qs)
         total_clicks = ClickMetadata.objects.count()
         week_ago = timezone.now() - timedelta(days=7)
@@ -107,6 +112,7 @@ class DashboardView(LoginRequiredMixin, View):
             'filter_days': filter_days,
             'filter_from': filter_from,
             'filter_to': filter_to,
+            'search': search,
         })
 
 
@@ -128,9 +134,9 @@ class ExportSubmissionPdfView(LoginRequiredMixin, View):
 
 
 class ExportSubmissionsPdfView(LoginRequiredMixin, View):
-    """Export submissions as PDF. Respects same date filter as dashboard (?days=N or ?from=...&to=...)."""
+    """Export submissions as PDF. Respects same date filter and search as dashboard."""
     def get(self, request):
-        submissions_qs, _fd, _ff, _ft = _get_submissions_queryset(request)
+        submissions_qs, _fd, _ff, _ft, _search = _get_submissions_queryset(request)
         submissions = list(submissions_qs[:PDF_EXPORT_MAX_SUBMISSIONS])
         if not submissions:
             response = HttpResponse(b'', content_type='application/pdf')
@@ -232,15 +238,8 @@ def form_view(request):
     if request.method == 'POST':
         form = SubmissionForm(request.POST)
         if form.is_valid():
-            data = form.cleaned_data
-            # Update existing record if same phone, else create new (email does not matter)
-            submission = Submission.objects.filter(phone=data['phone']).first()
-            if submission:
-                for key, value in data.items():
-                    setattr(submission, key, value)
-                submission.save()
-            else:
-                submission = form.save()
+            # Always create new submission (never update existing)
+            submission = form.save()
             tracking_url = request.build_absolute_uri(
                 reverse('core:track', args=[str(submission.tracking_token)])
             )
