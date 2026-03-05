@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Ensure reportlab is available (in case image was built before it was added to requirements.txt)
+python -c "import reportlab" 2>/dev/null || pip install -q --no-cache-dir "reportlab>=4.0"
+
 echo "Waiting for PostgreSQL..."
 while ! python -c "
 import os
