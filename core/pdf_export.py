@@ -67,15 +67,6 @@ def _format_screen(click):
     return "—"
 
 
-def _format_env(click):
-    e = getattr(click, 'environment', None) or {}
-    tz = e.get('timezone')
-    lang = e.get('language')
-    if tz or lang:
-        return _sanitize(f"{tz or '—'} · {lang or '—'}", 80)
-    return "—"
-
-
 def build_submissions_pdf(submissions):
     """
     Build a PDF containing the given submissions and their click metadata.
@@ -102,7 +93,8 @@ def build_submissions_pdf(submissions):
     body_style = styles['Normal']
     story = []
 
-    story.append(Paragraph("Submission(s) Export", title_style))
+    story.append(Paragraph("Techtronix Solutions LLC", title_style))
+    story.append(Paragraph("Submission(s) Export", styles['Heading3']))
     generated = django_tz.now().strftime("%Y-%m-%d %H:%M UTC")
     story.append(Paragraph(f"Generated: {generated}", body_style))
     story.append(Spacer(1, 8 * mm))
@@ -135,16 +127,15 @@ def build_submissions_pdf(submissions):
         clicks = list(rel.all()) if rel else []
         if clicks:
             story.append(Spacer(1, 2 * mm))
-            for i, click in enumerate(clicks, 1):
+            for click in clicks:
                 ts = click.timestamp.strftime("%Y-%m-%d %H:%M") if getattr(click, 'timestamp', None) else "—"
-                story.append(Paragraph(f"Click {i} — {ts}", body_style))
+                story.append(Paragraph(ts, body_style))
                 click_data = [
                     ["IP", _sanitize(str(click.ip_address) if click.ip_address else "—")],
                     ["Geo", _format_geo(click)],
                     ["Browser", _format_browser(click)],
                     ["Device", _format_device(click)],
                     ["Screen", _format_screen(click)],
-                    ["Environment", _format_env(click)],
                 ]
                 ct = Table(click_data, colWidths=[28 * mm, 137 * mm])
                 ct.setStyle(TableStyle([
