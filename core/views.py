@@ -9,6 +9,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.utils import timezone
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse, Http404, HttpResponse
@@ -297,6 +298,7 @@ def sanitize_headers(request):
     return headers
 
 
+@login_required
 @ratelimit(key='ip', rate='10/h', method='POST')
 @require_http_methods(['GET', 'POST'])
 def form_view(request):
@@ -325,8 +327,9 @@ def form_view(request):
 
 
 def thank_you_view(request):
-    """Dedicated thank you page shown after successful submission."""
-    return render(request, 'core/thank_you.html')
+    """Dedicated thank you page shown after successful submission or link verification."""
+    verified = request.GET.get('verified') == '1'
+    return render(request, 'core/thank_you.html', {'verified': verified})
 
 
 def favicon_view(request):
@@ -341,7 +344,7 @@ def track_view(request, tracking_token):
     return render(request, 'core/track.html', {
         'submission': submission,
         'tracking_token': tracking_token,
-        'track_url': request.build_absolute_uri(reverse('core:form')),
+        'track_url': request.build_absolute_uri(reverse('core:thank_you')) + '?verified=1',
     })
 
 
