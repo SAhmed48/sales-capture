@@ -14,13 +14,19 @@
                 </div>
             </div>
             <h1 class="text-2xl font-semibold text-slate-800 mb-2">Thank You</h1>
+            {% if verified %}
+            <p class="text-slate-500 mb-6">Your submission has been verified successfully.</p>
+            {% else %}
             <p class="text-slate-500 mb-6">Your information has been submitted successfully. Please check your email and phone for a confirmation message with a verification link.</p>
+            {% if user.is_authenticated %}
             <a href="{% url 'core:form' %}" class="inline-flex items-center gap-2 py-3 px-6 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-xl shadow-lg shadow-primary-500/25 transition-all hover:shadow-primary-500/40">
                 Submit Another
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                 </svg>
             </a>
+            {% endif %}
+            {% endif %}
         </div>
     </div>
 </div>
