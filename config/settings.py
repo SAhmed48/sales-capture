@@ -147,6 +147,9 @@ SITE_URL = env('SITE_URL', default='http://localhost:8000')
 # Add your reverse proxy/load balancer IPs. Includes Docker networks (172.16.0.0/12).
 TRUSTED_PROXY_IPS = set(ip.strip() for ip in env.list('TRUSTED_PROXY_IPS', default=['127.0.0.1', '::1', '172.17.0.1', '172.16.0.0/12']))
 
+# PDF export watermark (set PDF_WATERMARK_TEXT in .env; empty = no watermark)
+PDF_WATERMARK_TEXT = env('PDF_WATERMARK_TEXT', default='Sales Capture')
+
 # Auth (login/dashboard)
 LOGIN_URL = 'core:login'
 LOGIN_REDIRECT_URL = 'core:dashboard'
