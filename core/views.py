@@ -5,6 +5,7 @@ import uuid
 from datetime import timedelta, datetime
 
 from django.conf import settings
+from django.core.paginator import Paginator
 from django.db.models import Q
 from django.utils import timezone
 from django.contrib import messages
@@ -104,16 +105,69 @@ def _get_submissions_queryset(request):
     return qs.prefetch_related('click_metadata'), filter_days, filter_period, filter_from, filter_to, search
 
 
+PAGE_SIZE_OPTIONS = [10, 15, 25, 50]
+DASHBOARD_PAGE_SIZE_DEFAULT = 15
+
+
+def _page_numbers_to_display(current, total, max_visible=7):
+    """Return list of (page_num, is_ellipsis) for pagination links. Ellipsis entries are (None, True)."""
+    if total <= max_visible:
+        return [(p, False) for p in range(1, total + 1)]
+    result = []
+    shown = set()
+    # Always show first
+    result.append((1, False))
+    shown.add(1)
+    # Pages around current
+    for p in range(max(1, current - 2), min(total + 1, current + 3)):
+        if p not in shown:
+            result.append((p, False))
+            shown.add(p)
+    # Always show last
+    if total not in shown:
+        result.append((total, False))
+        shown.add(total)
+    # Sort and insert ellipsis where there are gaps
+    result.sort(key=lambda x: (x[0] or 0))
+    out = []
+    prev = 0
+    for p, is_el in result:
+        if prev and p - prev > 1:
+            out.append((None, True))
+        out.append((p, False))
+        prev = p
+    return out
+
+
 class DashboardView(LoginRequiredMixin, View):
-    """Dashboard showing all submissions with their details. Supports date filter and search by name/phone."""
+    """Dashboard showing all submissions with their details. Supports date filter, search, and pagination."""
     def get(self, request):
         submissions_qs, filter_days, filter_period, filter_from, filter_to, search = _get_submissions_queryset(request)
-        submissions = list(submissions_qs)
+
+        try:
+            per_page = int(request.GET.get('per_page', DASHBOARD_PAGE_SIZE_DEFAULT))
+            if per_page not in PAGE_SIZE_OPTIONS:
+                per_page = DASHBOARD_PAGE_SIZE_DEFAULT
+        except (ValueError, TypeError):
+            per_page = DASHBOARD_PAGE_SIZE_DEFAULT
+
+        paginator = Paginator(submissions_qs, per_page)
+        page_number = request.GET.get('page', 1)
+        page = paginator.get_page(page_number)
         total_clicks = ClickMetadata.objects.count()
         week_ago = timezone.now() - timedelta(days=7)
         recent_count = Submission.objects.filter(created_at__gte=week_ago).count()
+        get_copy = request.GET.copy()
+        for key in ('page',):
+            if key in get_copy:
+                get_copy.pop(key)
+        pagination_query = get_copy.urlencode()
+
+        page_numbers = _page_numbers_to_display(page.number, paginator.num_pages) if paginator.num_pages > 1 else []
+
         return render(request, 'core/dashboard.html', {
-            'submissions': submissions,
+            'page': page,
+            'submissions': page.object_list,
             'total_clicks': total_clicks,
             'recent_count': recent_count,
             'filter_days': filter_days,
@@ -121,6 +175,10 @@ class DashboardView(LoginRequiredMixin, View):
             'filter_from': filter_from,
             'filter_to': filter_to,
             'search': search,
+            'pagination_query': pagination_query,
+            'per_page': per_page,
+            'page_size_options': PAGE_SIZE_OPTIONS,
+            'page_numbers': page_numbers,
         })
 
 
