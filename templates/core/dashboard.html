@@ -13,7 +13,10 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                     </svg>
                 </div>
-                <h1 class="text-xl font-semibold text-slate-800">Dashboard</h1>
+                <div class="leading-tight">
+                    <h1 class="text-xl font-semibold text-slate-800">Techtronix Solutions LLC</h1>
+                    <p class="text-xs text-slate-500">Dashboard</p>
+                </div>
             </div>
             <div class="flex items-center gap-2 sm:gap-3">
                 <a href="{% url 'core:form' %}" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-xl transition-colors">
@@ -138,7 +141,7 @@
                         <a href="{% url 'core:dashboard' %}{% if search %}?search={{ search|urlencode }}{% endif %}" class="px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap shrink-0 {% if not filter_days and not filter_period and not filter_from and not filter_to %}bg-white text-primary-700 shadow-sm border border-slate-200/80{% else %}text-slate-600 hover:text-slate-800{% endif %}">All</a>
                         <a href="{% url 'core:dashboard' %}?period=today{% if search %}&search={{ search|urlencode }}{% endif %}" class="px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap shrink-0 {% if filter_period == 'today' %}bg-white text-primary-700 shadow-sm border border-slate-200/80{% else %}text-slate-600 hover:text-slate-800{% endif %}">Today</a>
                         <a href="{% url 'core:dashboard' %}?period=yesterday{% if search %}&search={{ search|urlencode }}{% endif %}" class="px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap shrink-0 {% if filter_period == 'yesterday' %}bg-white text-primary-700 shadow-sm border border-slate-200/80{% else %}text-slate-600 hover:text-slate-800{% endif %}">Yesterday</a>
-                        <a href="{% url 'core:dashboard' %}?days=3{% if search %}&search={{ search|urlencode }}{% endif %}" class="px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap shrink-0 {% if filter_days == '3' %}bg-white text-primary-700 shadow-sm border border-slate-200/80{% else %}text-slate-600 hover:text-slate-800{% endif %}">3 days</a>
+                        <a href="{% url 'core:dashboard' %}?days=3{% if search %}&search={{ search|urlencode }}{% endif %}" class="px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap shrink-0 {% if filter_days == '3' %}bg-white text-primary-700 shadow-sm border border-slate-200/80{% else %}text-slate-600 hover:text-slate-800{% endif %}">Last 3 days</a>
                         <a href="{% url 'core:dashboard' %}?days=7{% if search %}&search={{ search|urlencode }}{% endif %}" class="px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap shrink-0 {% if filter_days == '7' %}bg-white text-primary-700 shadow-sm border border-slate-200/80{% else %}text-slate-600 hover:text-slate-800{% endif %}">Last 7 days</a>
                         <a href="{% url 'core:dashboard' %}?days=30{% if search %}&search={{ search|urlencode }}{% endif %}" class="px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap shrink-0 {% if filter_days == '30' %}bg-white text-primary-700 shadow-sm border border-slate-200/80{% else %}text-slate-600 hover:text-slate-800{% endif %}">Last 30 days</a>
                     </div>
@@ -323,15 +326,6 @@
                                                     <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Screen</span>
                                                 </div>
                                                 <p class="text-sm text-slate-800">{% if click.screen.resolution or click.screen.viewport %}{{ click.screen.resolution|default:"" }}{% if click.screen.viewport %} · {{ click.screen.viewport }}{% endif %}{% if click.screen.colorDepth %} · {{ click.screen.colorDepth }}bit{% endif %}{% if click.screen.pixelRatio %} · {{ click.screen.pixelRatio }}x{% endif %}{% else %}—{% endif %}</p>
-                                            </div>
-                                            <div class="click-meta-item">
-                                                <div class="flex items-center gap-2 mb-1.5">
-                                                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0h.5a2.5 2.5 0 002.5-2.5V3.935M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                    </svg>
-                                                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Environment</span>
-                                                </div>
-                                                <p class="text-sm text-slate-800">{% if click.environment.timezone or click.environment.language %}{{ click.environment.timezone|default:"" }}{% if click.environment.language %} · {{ click.environment.language }}{% endif %}{% if click.environment.cookiesEnabled != None %} · Cookies: {{ click.environment.cookiesEnabled|yesno:"Yes,No" }}{% endif %}{% if click.environment.onlineStatus != None %} · Online: {{ click.environment.onlineStatus|yesno:"Yes,No" }}{% endif %}{% else %}—{% endif %}</p>
                                             </div>
                                         </div>
                                     </div>
