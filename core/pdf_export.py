@@ -93,8 +93,7 @@ def build_submissions_pdf(submissions):
     body_style = styles['Normal']
     story = []
 
-    story.append(Paragraph("Techtronix Solutions LLC", title_style))
-    story.append(Paragraph("Submission(s) Export", styles['Heading3']))
+    story.append(Paragraph("Form Submission(s) Export", title_style))
     generated = django_tz.now().strftime("%Y-%m-%d %H:%M UTC")
     story.append(Paragraph(f"Generated: {generated}", body_style))
     story.append(Spacer(1, 8 * mm))
